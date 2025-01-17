@@ -10,6 +10,7 @@ import com.adamratzman.spotify.models.serialization.nonstrictJson
 import com.adamratzman.spotify.models.serialization.toObject
 import com.adamratzman.spotify.utils.urlEncodeBase64String
 import com.soywiz.krypto.SHA256
+import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.CancellationException
@@ -890,6 +891,7 @@ public class SpotifyClientApiBuilder(
 
                 val response = executeTokenRequest(
                     HttpRequest(
+                        options.httpClient,
                         "https://accounts.spotify.com/api/token",
                         HttpRequestMethod.POST,
                         mapOf(
@@ -932,6 +934,7 @@ public class SpotifyClientApiBuilder(
                 require(clientId != null && redirectUri != null) { "You need to specify a valid clientId and redirectUri in the credentials block!" }
 
                 val response = HttpRequest(
+                    options.httpClient,
                     "https://accounts.spotify.com/api/token",
                     HttpRequestMethod.POST,
                     mapOf(
@@ -1142,6 +1145,7 @@ public class SpotifyUserAuthorization(
  * @param enableDebugMode Whether to enable debug mode (false by default). With debug mode, all response JSON will be outputted to console.
  * @param afterTokenRefresh An optional block to execute after token refresh has been completed.
  * @param httpResponseSubscriber An optional suspending method to subscribe to successful http responses.
+ * @param httpClient The Ktor Http Client that is used to send requests. Defaults to platform default client.
  */
 public data class SpotifyApiOptions(
     public var useCache: Boolean = true,
@@ -1160,5 +1164,12 @@ public data class SpotifyApiOptions(
     public var retryOnInternalServerErrorTimes: Int? = 5,
     public var enableDebugMode: Boolean = false,
     public var httpResponseSubscriber: (suspend (request: HttpRequest, response: HttpResponse) -> Unit)? = null,
-    public var afterTokenRefresh: (suspend (GenericSpotifyApi) -> Unit)? = null
-)
+    public var afterTokenRefresh: (suspend (GenericSpotifyApi) -> Unit)? = null,
+    public var httpClient: HttpClient = defaultHttpClient
+) {
+    internal companion object {
+        internal val defaultHttpClient = HttpClient {
+            expectSuccess = false
+        }
+    }
+}

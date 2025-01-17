@@ -221,6 +221,7 @@ public abstract class SpotifyEndpoint(public val api: GenericSpotifyApi) {
         method: HttpRequestMethod = HttpRequestMethod.GET,
         contentType: String? = null
     ) = HttpRequest(
+        api.spotifyApiOptions.httpClient,
         url,
         method,
         null,

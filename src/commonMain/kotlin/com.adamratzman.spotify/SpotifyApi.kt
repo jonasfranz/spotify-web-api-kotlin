@@ -14,6 +14,7 @@ import com.adamratzman.spotify.models.serialization.nonstrictJson
 import com.adamratzman.spotify.models.serialization.toObject
 import com.adamratzman.spotify.utils.asList
 import com.adamratzman.spotify.utils.base64ByteEncode
+import io.ktor.client.HttpClient
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmOverloads
 
@@ -327,10 +328,12 @@ public sealed class SpotifyApi<T : SpotifyApi<T, B>, B : ISpotifyApiBuilder<T, B
             clientId: String,
             clientSecret: String,
             api: GenericSpotifyApi?,
-            json: Json = api?.spotifyApiOptions?.json ?: Json.Default
+            json: Json = api?.spotifyApiOptions?.json ?: Json.Default,
+            client: HttpClient,
         ): Token {
             val response = executeTokenRequest(
                 HttpRequest(
+                    client,
                     "https://accounts.spotify.com/api/token",
                     HttpRequestMethod.POST,
                     mapOf("grant_type" to "client_credentials"),
@@ -648,7 +651,7 @@ public open class SpotifyClientApi(
 
             require(api.clientId != null) { "The client id is not set" }
 
-            refreshSpotifyClientToken(api.clientId, api.clientSecret, api.token.refreshToken, api.usesPkceAuth)
+            refreshSpotifyClientToken(api.clientId, api.clientSecret, api.token.refreshToken, api.usesPkceAuth, api.spotifyApiOptions.httpClient,)
         }
     }
 }
@@ -689,7 +692,7 @@ public suspend fun getCredentialedToken(
     clientSecret: String,
     api: GenericSpotifyApi?,
     json: Json = api?.spotifyApiOptions?.json ?: Json.Default
-): Token = SpotifyApi.getCredentialedToken(clientId, clientSecret, api, json)
+): Token = SpotifyApi.getCredentialedToken(clientId, clientSecret, api, json, api?.spotifyApiOptions?.httpClient ?: SpotifyApiOptions.defaultHttpClient)
 
 internal suspend fun executeTokenRequest(
     httpRequest: HttpRequest,
@@ -718,7 +721,8 @@ public suspend fun refreshSpotifyClientToken(
     clientId: String,
     clientSecret: String?,
     refreshToken: String?,
-    usesPkceAuth: Boolean
+    usesPkceAuth: Boolean,
+    client: HttpClient,
 ): Token {
     fun getDefaultClientApiTokenBody(): Map<String, String?> {
         val map = mutableMapOf(
@@ -735,6 +739,7 @@ public suspend fun refreshSpotifyClientToken(
         require(clientSecret != null) { "The client secret is not set" }
         executeTokenRequest(
             HttpRequest(
+                client,
                 "https://accounts.spotify.com/api/token",
                 HttpRequestMethod.POST,
                 getDefaultClientApiTokenBody(),
@@ -748,6 +753,7 @@ public suspend fun refreshSpotifyClientToken(
         )
     } else {
         HttpRequest(
+            client,
             "https://accounts.spotify.com/api/token",
             HttpRequestMethod.POST,
             getDefaultClientApiTokenBody(),
@@ -783,6 +789,7 @@ public fun refreshSpotifyClientTokenRestAction(
     clientId: String,
     clientSecret: String?,
     refreshToken: String?,
-    usesPkceAuth: Boolean
+    usesPkceAuth: Boolean,
+    client: HttpClient,
 ): SpotifyRestAction<Token> =
-    SpotifyRestAction { refreshSpotifyClientToken(clientId, clientSecret, refreshToken, usesPkceAuth) }
+    SpotifyRestAction { refreshSpotifyClientToken(clientId, clientSecret, refreshToken, usesPkceAuth, client) }

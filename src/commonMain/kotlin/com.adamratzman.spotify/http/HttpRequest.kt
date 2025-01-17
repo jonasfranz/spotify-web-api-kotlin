@@ -12,7 +12,6 @@ import com.adamratzman.spotify.models.SpotifyRatelimitedException
 import com.adamratzman.spotify.models.serialization.nonstrictJson
 import com.adamratzman.spotify.models.serialization.toObject
 import com.soywiz.klogger.Console
-import com.soywiz.korio.async.launch
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.HttpRequestBuilder
@@ -26,7 +25,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.content.ByteArrayContent
 import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 
@@ -49,6 +47,7 @@ public typealias HttpConnection = HttpRequest
  * Provides a fast, easy, and slim way to execute and retrieve HTTP GET, POST, PUT, and DELETE requests
  */
 public class HttpRequest constructor(
+    private val client: HttpClient,
     public val url: String,
     public val method: HttpRequestMethod,
     public val bodyMap: Map<*, *>?,
@@ -106,7 +105,7 @@ public class HttpRequest constructor(
         val httpRequest = buildRequest(additionalHeaders)
         if (api?.spotifyApiOptions?.enableDebugMode == true) Console.debug("Request: $this")
         try {
-            return httpClient.request(httpRequest).let { response ->
+            return client.request(httpRequest).let { response ->
                 val respCode = response.status.value
 
                 if (respCode in 500..599 && (retryIfInternalServerErrorLeft == null || retryIfInternalServerErrorLeft == -1 || retryIfInternalServerErrorLeft > 0)) {
@@ -250,9 +249,4 @@ public class HttpRequest constructor(
         """.trimMargin()
     }
 
-    internal companion object {
-        internal val httpClient = HttpClient {
-            expectSuccess = false
-        }
-    }
 }

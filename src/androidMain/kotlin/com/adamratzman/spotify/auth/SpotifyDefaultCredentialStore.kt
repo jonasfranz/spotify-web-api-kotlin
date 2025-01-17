@@ -187,7 +187,11 @@ public class SpotifyDefaultCredentialStore(
     public suspend fun getSpotifyClientPkceApi(block: ((SpotifyApiOptions).() -> Unit)? = null): SpotifyClientApi? {
         val token = spotifyToken
             ?: if (spotifyRefreshToken != null) {
-                val newToken = refreshSpotifyClientToken(clientId, null, spotifyRefreshToken, true)
+                val httpClient = when(block) {
+                    null -> SpotifyApiOptions.defaultHttpClient
+                    else -> SpotifyApiOptions().apply(block).httpClient
+                }
+                val newToken = refreshSpotifyClientToken( clientId, null, spotifyRefreshToken, true, httpClient)
                 spotifyToken = newToken
                 newToken
             } else {
