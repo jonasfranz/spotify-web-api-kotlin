@@ -37,11 +37,8 @@ buildscript {
 // --- spotify-web-api-kotlin info ---
 val libraryVersion: String = System.getenv("SPOTIFY_API_PUBLISH_VERSION") ?: "0.0.0.SNAPSHOT"
 
-// Publishing credentials (environment variable)
-val nexusUsername: String? = System.getenv("NEXUS_USERNAME")
-val nexusPassword: String? = System.getenv("NEXUS_PASSWORD")
 
-group = "com.adamratzman"
+group = "de.jonasfranz"
 version = libraryVersion
 
 
@@ -423,17 +420,11 @@ fun PublishingExtension.registerPublishing() {
 
     repositories {
         maven {
-            name = "nexus"
-
-            // Publishing locations
-            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-
-            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
-
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/jonasfranz/spotify-api-kotlin")
             credentials {
-                username = nexusUsername
-                password = nexusPassword
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
