@@ -31,12 +31,6 @@ jobs:
         run: sudo apt-get install -y curl libcurl4-openssl-dev
       - name: Publish JVM/Linux/Android
         run: ./gradlew publishKotlinMultiplatformPublicationToGitHubPackagesRepository publishJvmPublicationToGitHubPackagesRepository publishAndroidPublicationToGitHubPackagesRepository publishLinuxX64PublicationToGitHubPackagesRepository publishJsPublicationToGitHubPackagesRepository
-      - name: Archive test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: code-coverage-report
-          path: build/reports
-        if: always()
   release_mac:
     runs-on: macos-latest
     environment: release
