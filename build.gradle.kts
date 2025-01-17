@@ -421,7 +421,7 @@ fun PublishingExtension.registerPublishing() {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/jonasfranz/spotify-api-kotlin")
+            url = uri("https://maven.pkg.github.com/jonasfranz/spotify-web-api-kotlin")
             credentials {
                 username = System.getenv("GITHUB_USERNAME")
                 password = System.getenv("GITHUB_TOKEN")
